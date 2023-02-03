@@ -1,0 +1,24 @@
+
+
+<h1>Products</h1>
+
+{{#each docs}}
+  <div class="product"></div>
+    <h3>title:{{this.title}}</h3>
+    <p>description:{{this.description}}</p>
+    <p>price:{{this.price}}</p>
+    <p>thumbnail:{{this.thumbnail}}</p>
+    <p>stock:{{this.stock}}</p>  
+    <p>code:{{this.code}}</p>  
+    <p>category:{{this.category}}</p>  
+    <p>status:{{this.status}}</p>
+    <button class="add-to-cart" data-product-id="{{idProduct}}">Add to Cart</button>   
+  </div>
+{{/each}}
+{{#if prevPage}}
+<a href="/pagination?page={{prevPage}}">Anterior</a>
+{{/if}}
+{{page}}
+{{#if nextPage}}
+<a href="/pagination?page={{nextPage}}">Siguiente</a>
+{{/if}}
