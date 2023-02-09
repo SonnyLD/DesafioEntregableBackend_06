@@ -1,18 +1,23 @@
-import * as UserService from "../services/user.services.js";
+import userService from './user.services.js';
 
-export async function login(email, password) {
-  try {
-    const user = await UserService.getUser(email);
-    if (!user) {
-      throw new Error("El usuario no existe");
-    } else {
-      if (password === user.password) {
-        return true;
-      } else {
-        return false;
+class AuthServices {
+  async login(email, password) {
+    try {
+      const user = await userService.getUser(email);
+
+      if (!user) {
+        throw new Error('User not found')
       }
+      if (user.password !== password) {
+        throw new Error('Wrong password')
+      }
+     
+      return user
+    } catch (error) {
+      throw new Error(error.message)
     }
-  } catch (error) {
-    throw new Error(error.message);
   }
 }
+
+const authServices = new AuthServices();
+export default authServices;

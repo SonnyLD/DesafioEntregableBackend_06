@@ -1,24 +1,40 @@
-import { UserModel } from "../dao/models/users.models.js";
+import UserModel from "../dao/models/users.models.js";
+import cartServices from"../services/carts.services.js"
+class UserServices {
+  async createUser(user) {
+    try {
+      const userExists = await UserModel.findOne({ email: user.email }).lean();
 
-export async function createUser(data) {
-  try {
-    const userExist = await getUser(data.email);
-    if (userExist) {
-      throw new Error("El usuario ya existe ");
-    } else {
-      const user = await UserModel.create(data);
-      return user;
+      if (userExists) {
+        throw new Error('User already exists')
+      }
+      const newCart = await cartServices.createCart();
+
+      const createdUser = await UserModel.create({ ...user, cart: newCart._id });
+
+      return createdUser
+    } catch (error) {
+      throw new Error(error.message)
     }
-  } catch (error) {
-    throw new Error(error.message);
+  }
+
+  async getUser(email) {
+    try {
+      const users = await UserModel.findOne({ email }).populate({
+        path: 'cart',
+        populate: {
+          path: 'products.product'
+        }
+      }).lean()
+      if (!users) {
+        throw new Error('User not found')
+      }
+      return users
+    } catch (error) {
+      throw new Error(error.message)
+    }
   }
 }
 
-export async function getUser(email) {
-  try {
-    const user = await UserModel.find({ email }).lean();
-    return user[0];
-  } catch (error) {
-    throw new Error(error.message);
-  }
-}
+const userService = new UserServices();
+export default userService;

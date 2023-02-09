@@ -1,28 +1,22 @@
-import { Router } from "express";
-import CartModel from "../dao/models/carts.models.js";
-import ProductModel from "../dao/models/products.models.js";
+import express from "express";
+import * as viewsController from '../controllers/views.controller.js'
 
+const viewsRouter = express.Router();
 
-export const viewsRouter = Router();
+viewsRouter.get('/chat', viewsController.getChat);
 
-viewsRouter.get("/", async (req, res) => {
-  const {page} = req.query
-  const products = await ProductModel.paginate({},{limit: 3, page});
-  res.json(products);
- 
-});
+viewsRouter.get("/", viewsController.login);
 
-viewsRouter.get("/pagination",async (req, res) => {
-  const { page } = req.query;
-  const products = await ProductModel.paginate({}, { limit: 3, page, lean: true });
-  console.log(products);
-  res.render("pagination", {...products});
+viewsRouter.get('/cart', viewsController.getCart);
 
-});
+viewsRouter.get('/products', viewsController.getProducts);
 
-viewsRouter.get("/carts", async (req, res) => {
-  const {page} = req.query
-  const cart = await CartModel.paginate({},{limit: 3, page});
-  res.json(cart);
- 
-});
+viewsRouter.get('/register', viewsController.registerUser);
+
+viewsRouter.get('/usercenter', viewsController.getUserCenter);
+
+viewsRouter.get('/admin', viewsController.getAdminCenter);
+
+viewsRouter.get('/admin/update/', viewsController.getUpdateProduct);
+
+export default viewsRouter; 

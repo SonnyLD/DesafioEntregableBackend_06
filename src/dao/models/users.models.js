@@ -1,6 +1,6 @@
-import { Schema, model } from "mongoose";
+import mongoose from "mongoose";
 
-const schema = new Schema(
+const userSchema = new mongoose.Schema(
   {
     first_name: {
       type: String,
@@ -26,10 +26,23 @@ const schema = new Schema(
       minLength: 6,
       maxLength: 10,
     },
+    cart: {
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: "Carts",
+      required: true,
+      default: null
+  },
+  role: {
+    type: String,
+    default: "user",
+    enum: ["admin", "user"],
+  }
   },
   {
     timestamps: true,
   },
 );
 
-export const UserModel = model("Users", schema);
+const UserModel = mongoose.model("Users", userSchema);
+
+export default UserModel;

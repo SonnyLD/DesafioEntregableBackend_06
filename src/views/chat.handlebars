@@ -1,14 +1,25 @@
-<h2>Hola websocket</h2>
+<h2 id="welcomeText">Welcome to the webchat!</h2>
 
-<div><p id="name"></p></div>
+
+<p id="userName">
+    {{#if user}} 
+        {{user.firstName}}, write and send your message!
+    {{/if}}
+</p>
+
+{{#unless user}} 
+    <div>
+        <p><a href="/register">Create an acount</a> or <a href="/">log in</a>.</p>
+    </div>
+{{/unless}}
 
 <div>
-  <input id ="message" type="text">
-  <button id="submit">Enviar</button>
+    <input id ="messageInput" type="text">
+    <button id="submitBtn" class="submitBtn">Send</button>
 </div>
 
-<div>
-  <p id="messages"></p>
+<div id="messagesContainer" class="messagesContainer">
+
 </div>
 
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>

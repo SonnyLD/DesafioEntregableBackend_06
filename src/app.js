@@ -3,7 +3,7 @@ import productsRouter from './routers/products.router.js';
 import cartsRouter from './routers/carts.router.js'
 import UserRouter from "./routers/user.router.js";
 import AuthRouter from "./routers/auth.router.js";
-import {viewsRouter} from './routers/views.router.js';
+import viewsRouter from './routers/views.router.js';
 import dotenv from 'dotenv';
 import "./config/db.js";
 import cookie from "cookie-parser";
@@ -11,6 +11,7 @@ import session from "express-session";
 import mongoStore from "connect-mongo";
 import { engine } from 'express-handlebars';
 import { Server } from 'socket.io';
+import webSocketService from './services/websocket.services.js';
 
 dotenv.config()
 
@@ -50,42 +51,12 @@ app.use('/api/carts',cartsRouter);
 app.use("/api/users", UserRouter);
 app.use("/api/auth", AuthRouter);
 app.use("/", viewsRouter);
-app.use("/pagination", viewsRouter)
+
 
 const PORT = process.env.PORT || 8080
 const server = app.listen(PORT, () => { 
 console.log(`🚀 Server started on port http://localhost:${PORT}`)});
 server.on('error', (err) => console.log(err));
 
-
-const io = new Server(server)
-
-io.on('connection', (socket) => {
-    console.log(`Nueva conexion desde el id: ${socket.id}`);
-
-    socket.on('disconnect', (_socket) => {
-        console.log(`Cierre de conexion`);
-    })
-})
-
-const socketServer = new Server(server);
-
-const messages = [];
-socketServer.on("connection", (socket) => {
-  console.log("Nueva conexión");
-  socket.emit("Welcome", { welcome: "Chat web", messages });
-
-  socket.on("disconnect", () => {
-    console.log("Cliente desconectado");
-  });
-
-  socket.on("message", (data) => {
-    console.log("Servidor:", data);
-    messages.push(data);
-    socketServer.emit("message", data);
-  });
-
-  socket.on("newUser", (nombre) => {
-    socket.broadcast.emit("newUser", nombre);
-  });
-});
+const io = new Server(server);
+webSocketService.websocketInit(io);

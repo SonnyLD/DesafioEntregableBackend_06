@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import mongooseDelete from "mongoose-delete";
 
 const schema = new mongoose.Schema(
   {
@@ -17,6 +16,5 @@ const schema = new mongoose.Schema(
   },
 );
 
-schema.plugin(mongooseDelete, { deletedAt: true });
-
-export const MessageModel = mongoose.model("Message", schema);
+const MessageModel = mongoose.model("Message", schema);
+export default MessageModel;

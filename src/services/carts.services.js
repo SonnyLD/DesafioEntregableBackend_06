@@ -3,18 +3,12 @@ import productService from "../services/products.services.js";
 
 class CartServices {
 
-    async createCart(cartData) {
+    async createCart() {
         try {
-            const newCart = new CartModel(cartData);
-            if (newCart.Products.length > 0) { // Sets total for each product and subtotal for the cart
-                newCart.Products.forEach(Products => {
-                    Products.total = Number(Products.price * Products.quantity).toFixed(2);
-                });
-                newCart.subtotal = Number(newCart.Products.map(Products => Products.price * Products.quantity).reduce((acc, curr) => acc + curr)).toFixed(2);
-            }
+            const newCart = await CartModel.create({new: true});
+
+            return newCart;
             
-            const savedCart = await newCart.save();
-            return savedCart;
         } catch (error) {
             throw new Error(error.message);
         }
@@ -38,50 +32,60 @@ class CartServices {
         }
     }
 
- // https://stackoverflow.com/questions/59174763/how-to-add-product-to-shopping-cart-with-nodejs-express-and-mongoose 
 async addProductToCart(idCart, idProduct, quantity) {
   try {
-      // get cart from db
+     
       const cart = await CartModel.findById(idCart);
-      // get product from db
-      const product = await productService.getProduct(idProduct);
-      // check if product and cart exist in db
-      if (cart && product) {
-          let productIndex = cart.Products.findIndex(prod => prod.idProduct === idProduct);
+      if (!cart) {
+        throw new Error("Cart not found");
+    }
+    const productIsInCart = cart.products.some(prod => prod.product.equals(idProduct)); 
+    let updatedCart = {};
+    if (productIsInCart) { 
+        const cart = await CartModel.findOneAndUpdate(
+            { _id: cartID, 'products.product': idProduct },
+            { $inc: {'products.$.quantity': quantity} },
+            { new: true }
+        ).lean()
+        updatedCart = {...cart};
+    } else {
+        const cart = await CartModel.findOneAndUpdate(
+            { _id: idCart },
+            { $push: {products: {product: idProduct, quantity}} },
+            { new: true }
+        ).lean()
+        updatedCart = {...cart};
+    }
 
-          if (productIndex != -1) { // product is in cart?
-              cart.Products[productIndex].quantity = cart.Products[productIndex].quantity + quantity;
-              cart.Products[productIndex].total = cart.Products[productIndex].quantity * product.price;
-              cart.subtotal = cart.Products.map(prod => prod.total).reduce((acc, curr) => acc + curr);
-          } else {
-              cart.Products.push({
-                  idProduct: product.idProduct,
-                  quantity: quantity,
-                  price: product.price,
-                  total: Number(product.price * quantity).toFixed(2)
-              });
-              cart.subtotal = cart.Products.map(prod => prod.total).reduce((acc, curr) => acc + curr);
-          }
-          return await cart.save(); // updates cart in db
-      } else if (product && !cart) { // product is in db but cart does not exist in db creates a new cart and pushes the product
-          console.log('here')
-          const cartData = {
-//                    userId: userId,  When auth is already implemented
-              products: [{
-                  idProduct: idProduct,
-                  quantity: quantity,
-                  price: product.price,
-                  total: parseInt(product.price * quantity),
-              }],
-              subtotal: Number(product.price * quantity).toFixed(2)
-          }
-          return await CartModel.create(cartData);
-      }
-      return null
-  } catch (error) {
-      throw new Error(error.message);
-  }
-} // Can be modified if modifyQuantity method is implemented (for both add and rest methods)
+    return updatedCart;
+
+} catch (error) {
+    throw new Error(error.message);
+} 
+     
+      
+} 
+
+async updateQuantity(idCart,idProduct, quantity) {
+    try {
+        const cart = await CartModel.findByIdAndUpdate(
+            idCart,
+            { $set: {'products.$[elem].quantity': quantity } },
+            { arrayFilters: [{ 'elem.product': idProduct }], new: true }
+        )
+        return cart                
+    } catch (error) {
+        throw new Error(error.message);
+    }
+}
+async updateCart(idCart, cartData) {
+    try {
+        const updatedCart = await CartModel.findByIdAndUpdate(idCart, { products: cartData }, { new: true });
+        return updatedCart;
+    } catch (error) {
+        throw new Error(error.message);
+    }
+}
 
 async deleteProductFromCart(idCart, idProduct, quantity) {
     try { // Check comments in addProductToCart

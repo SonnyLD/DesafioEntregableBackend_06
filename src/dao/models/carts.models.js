@@ -1,51 +1,43 @@
 import mongoose from "mongoose";
-import mongooseDelete from "mongoose-delete";
-import pagination from "mongoose-paginate-v2";
 
-const schema = new mongoose.Schema(
-  {
-  
-    Products: [
-      {
-      idProduct: {
-        index: true,
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Products",
-        default: [],
-        
-      },
-      quantity: {
-        type: Number,
-        required: true,
-        min: 1,
-      },
-      price: {
-        type: Number,
-        required: true,
-        min: 0,
-      },
-      total: {
-        type: Number,
-        required: true,
-        min: 0
-      }
-    }
-    ],
-      subtotal: {
-        type: Number,
-        required: true,
-        min: 0,
-        default: 0,
-      }
-  },
-{
-  timestamps: true,
-},
- 
+const cartItemSchema = new mongoose.Schema(
+	{
+		product: {
+			type: mongoose.Schema.Types.ObjectId, 
+			ref: "Products",
+			required: true,
+		},
+		quantity: {
+			type: Number,
+			required: true,
+			min: 0,
+			default: 0,
+		},
+	
+	}, 
+	{ 
+		_id: false
+	}
 );
 
-schema.plugin(mongooseDelete, { deletedAt: true });
-schema.plugin(pagination);
+const cartSchema = new mongoose.Schema(
+	{
+		products: [
+			{ 
+				type: cartItemSchema, 
+				required: true, 
+			}
+		],
+	},
+	{
+		timestamps: true,
+	},
+);
 
-const CartModel = mongoose.model("Cart", schema);
+cartSchema.pre('findOne', function(next) {
+	this.populate('products.product');
+	next();
+});
+
+const CartModel = mongoose.model("Carts", cartSchema);
 export default CartModel;

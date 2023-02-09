@@ -1,85 +1,106 @@
 const socket = io();
 
-let name = document.getElementById("name");
-let submit = document.getElementById("submit");
-let message = document.getElementById("message");
-let messages = document.getElementById("messages");
+const submitBtn = document.getElementById("submitBtn");
+const messageInput = document.getElementById("messageInput");
+const messagesContainer = document.getElementById("messagesContainer");
+const welcomeText = document.getElementById("welcomeText");
+const userName = document.getElementById("userName");
+
 let newMessages = [];
+let user = userName.innerText.substring(0, userName.innerText.indexOf(','));
 
-socket.on("Welcome", (arg) => {
-  console.log(arg);
-  newMessages = arg.messages;
-  console.log(newMessages);
-  imprimirMessages(newMessages);
+socket.on("welcome", async (data) => {
+	try {
+		const messages = await getMessages(data);
+		loadMessages(messages);
+	} catch (error) {
+		console.log(error);
+	}
 });
 
-let user = null;
+socket.on("message", async (data) => {
+	const message = await getMessages(data);
+	printMessage({...message});
+});
 
-if (!user) {
-  Swal.fire({
-    title: "Identificate",
-    input: "text",
-    text: "Nombre de usuario",
-    allowOutsideClick: false,
-    inputValidator: (value) => {
-      return !value && "Necesitas escribir un nombre de usuario";
-    },
-  }).then((newUser) => {
-    user = newUser.value;
-    name.innerText = user;
-    socket.emit("newUser", user);
-  });
-}
+socket.on("newUser", (newUser) => {
+	Swal.fire({
+		text: `${newUser} has joined the chat!`,
+		toast: true,
+		position: "top-right",
+	});
+});
 
-submit.addEventListener("click", (e) => {
+if (!user.length > 0) {
+	Swal.fire({
+		title: "Please set your name",
+		text: "User name:",
+		input: "text",
+		allowOutsideClick: false,
+		inputValidator: (value) => {
+			return !value && "You need to set your user name";
+		}
+	}).then((newUser) => {
+		user = newUser.value;
+		welcomeText.innerText = `Welcome ${user}!`;
+		userName.remove();
+		socket.emit("newUser", user);
+		document.addEventListener('keypress', (e) => {
+			if (e.key === "Enter") {
+				sendMessage();
+			}
+			});
+	})
+} else {
+	document.addEventListener('keypress', (e) => {
+		if (e.key === "Enter") {
+			sendMessage();
+		}
+	});
+};
+
+submitBtn.addEventListener("click", (e) => {
   e.preventDefault();
-  const messageText = message.value.trim();
-  message.value = "";
-  console.log("Cliente: ", messageText);
-  socket.emit("message", { user, message: messageText, date: new Date() });
+  sendMessage();
 });
 
-socket.on("message", (data) => {
-  console.log("Mensaje recibido: ", data);
-  newMessages.push(data);
-  imprimirMessages(newMessages);
-});
-
-function imprimirMessages(newMessages) {
-  let _newMessages = "";
-  for (const message of newMessages) {
-    _newMessages += `${message.user}: ${message.message} - ${message.date}\n`;
-  }
-  messages.innerText = _newMessages;
-}
-
-socket.on("newUser", (nombre) => {
-  Swal.fire({
-    text: `Nuevo usuari@ ${nombre} conectad@!`,
-    toast: true,
-    position: "top-right",
+function loadMessages(messages) {
+	messagesContainer.innerHTML = '';
+	messages.forEach(msg => {
+		const messageBox = document.createElement('div');
+		messageBox.className = 'messageBox';
+		messageBox.innerHTML = `
+								<p class="messageUser" id="messageUser">${msg.user}</p>
+								<p class="messageText" id="messageText">${msg.message}</p>
+								<small class="messageDate" id="messageText">${msg.createdAt}</small>
+								`
+		messagesContainer.appendChild(messageBox);
   });
-});
-socket.on('listChange', (data) => {
-    console.log(data)
-    updateList(data);
-})
+};
 
-const listContainer = document.getElementById('listContainer');
+function printMessage(message) {
+	messagesContainer.innerHTML += `
+								<div class="messageBox">
+								<p class="messageUser" id="messageUser">${message.user}</p>
+								<p class="messageText" id="messageText">${message.message}</p>
+								<small class="messageDate" id="messageText">${message.createdAt}</small>
+	`;
+};
 
-const updateList = (list) => {
-    listContainer.innerHTML = '';
-    list.forEach((item) => {
-        const product = document.createElement('div');
-        product.setAttribute('style','display: flex; gap: 1rem; align-items: center;' )
-        product.innerHTML = `
-                        <h3>${item.title}</h3>
-                        <p>${item.description}</p>
-                        <p>Price: ${item.price}</p>
-                        <p>id: ${item.id}</p>
-                        <p>code :${item.code}</p>
-                        <p>Stock:${item.stock}</p>
-                    `;
-        listContainer.appendChild(product);
-    })
-}
+function sendMessage() {
+	const messageText = messageInput.value.trim();
+	messageInput.value = "";
+	socket.emit("newMessage", { user, message: messageText});
+};
+
+function getMessages(data) {
+	return new Promise((res, rej) => {
+		if (data.messages) {
+			res([...data.messages]);
+		} else if (data){
+			res(data);
+		} else {
+			rej(new Error("Failed to get new messages"));
+		}
+	});
+};

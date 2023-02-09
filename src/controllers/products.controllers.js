@@ -19,17 +19,34 @@ export async function getProduct(req, res) {
 
 export async function getProducts(req, res) {
   try {
-    const response = await productService.getProducts();
-    res.json({
-      product: response,
-      status: STATUS.SUCCESS,
-    });
-  } catch (error) {
-    res.status(400).json({
-      error: error.message,
-      status: STATUS.FAIL,
-    });
-  }
+    const {limit, sort, page, category} = req.query;
+    const options = {
+        limit: limit? Number(limit) : 10,
+        page: page? Number(page) : 1,
+        ...(sort && { sort: {price: sort} }),
+        ...(category && { category }),
+        lean: true
+    }
+
+    let query= {};
+    if (category) query = {category: category};
+
+    const paginatedData = await productService.getProducts(query, options);
+
+    if (paginatedData) {
+        res.status(200).json({
+            success: true,
+            data: paginatedData.docs
+        })
+    } else {
+        res.status(404).json({
+            success: false,
+            message: 'Products not found'
+        });
+    }
+} catch (error) {
+    res.status(500).json({ Error: error.message });
+}
 }
 
 export async function createProduct(req, res) {
