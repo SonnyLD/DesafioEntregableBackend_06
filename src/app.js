@@ -4,6 +4,8 @@ import cartsRouter from './routers/carts.router.js'
 import UserRouter from "./routers/user.router.js";
 import AuthRouter from "./routers/auth.router.js";
 import viewsRouter from './routers/views.router.js';
+import passportLocalRouter from'./routers/passportLocal.router.js';
+import githubRouter from './routers/github.routes.js';
 import dotenv from 'dotenv';
 import "./config/db.js";
 import cookie from "cookie-parser";
@@ -11,6 +13,8 @@ import session from "express-session";
 import mongoStore from "connect-mongo";
 import { engine } from 'express-handlebars';
 import { Server } from 'socket.io';
+import passport from 'passport';
+import configPassport from './config/passport.config.js';
 import webSocketService from './services/websocket.services.js';
 
 dotenv.config()
@@ -41,6 +45,11 @@ app.engine('handlebars', engine());
 app.set('view engine', 'handlebars');
 app.set('views', 'src/views');
 
+configPassport(passport);
+app.use(passport.initialize());
+app.use(passport.session());
+
+
 
 app.use((req, _res, next) => { //https://aaryanadil.com/pass-socket-io-to-express-routes-in-files/ 
     req.io = io;
@@ -51,6 +60,8 @@ app.use('/api/carts',cartsRouter);
 app.use("/api/users", UserRouter);
 app.use("/api/auth", AuthRouter);
 app.use("/", viewsRouter);
+app.use('/api/passport', passportLocalRouter);
+app.use('/api/github', githubRouter)
 
 
 const PORT = process.env.PORT || 8080

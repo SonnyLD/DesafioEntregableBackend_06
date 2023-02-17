@@ -12,13 +12,17 @@ export async function createUser(req, res) {
 
 export async function getUser(req, res) {
   try {
-    const { email } = req.params;
+    const { email } =  req.params;
     const user = await UserService.getUser(email);
-    if (user) {
-      delete user.password;
-      res.json({ user });
+    if (!user) {
+      throw new Error("User not found");
     }
+    delete user.password;
+    res.status(200).json({
+      success: true,
+      user,
+    });
   } catch (error) {
-    throw new Error(error.message);
+    res.status(500).json({ Error: error.message });
   }
 }

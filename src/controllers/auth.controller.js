@@ -2,13 +2,18 @@ import authServices from '../services/auth.service.js'
 
 export async function login(req, res) {
   try {
-    const { email, password } = req.body
+   /* const { email, password } = req.body
     const userIsLogged = await authServices.login(email, password)
     if (userIsLogged) {
       req.session.logged = true
       delete userIsLogged.password
       req.session.user = userIsLogged
-      res.status(200).redirect('/products')
+      res.status(200).redirect('/products')*/
+    const { email, password } = req.body;
+    const logged = await authServices.login(email, password);
+    if (logged) {
+      req.session.logged = true;
+      res.send("Usuario registrado");
     } else {
       res.status(401).json({
         success: false,
