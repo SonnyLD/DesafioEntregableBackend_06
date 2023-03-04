@@ -51,7 +51,6 @@ function passportConfig(passport) {
       }
     )
   );
-
   passport.use(
     'github',
     new passportGithub.Strategy(
