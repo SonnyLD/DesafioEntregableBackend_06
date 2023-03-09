@@ -1,4 +1,4 @@
-import UserService from "../services/user.services.js";
+import UserService from "../services/user.service.js";
 
 export async function createUser(req, res) {
   try {
@@ -13,6 +13,8 @@ export async function createUser(req, res) {
 export async function getUser(req, res) {
   try {
     const { email } =  req.params;
+    console.log('email:', email);
+    
     const user = await UserService.getUser(email);
     if (!user) {
       throw new Error("User not found");

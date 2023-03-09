@@ -1,5 +1,5 @@
-import UserModel from "../dao/models/users.models.js";
-import cartServices from"../services/carts.services.js"
+import { UserModel } from "../dao/models/users.models.js";
+import cartServices from"./carts.services.js"
 import bcrypt from 'bcrypt'
 
 class UserServices {
@@ -23,13 +23,15 @@ class UserServices {
   }
 
   async getUser(email) {
+    console.log('getUser called with email:', email);
     try {
-      const users = await UserModel.findOne({ email }).populate({
+      const users = await UserModel.findOne({email}).populate({
         path: 'cart',
         populate: {
           path: 'products.product'
         }
       }).lean()
+      console.log('getUser found user:', users);
       if (!users) {
         throw new Error('User not found')
       }

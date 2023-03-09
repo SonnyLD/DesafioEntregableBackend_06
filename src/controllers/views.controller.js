@@ -1,5 +1,5 @@
 import productService from "../services/products.services.js";
-import userServices from "../services/user.services.js";
+import userServices from "../services/user.service.js";
 
 export async function login(req, res) { 
   try {

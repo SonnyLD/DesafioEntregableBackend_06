@@ -1,5 +1,5 @@
 import express from 'express';
-import passport from 'passport';
+import passport from '../config/passport.config.js'
 import * as passportController from '../controllers/passport.controller.js';
 
 const passportLocalRouter = express.Router();
@@ -14,6 +14,7 @@ passportLocalRouter.post(
   }),
   passportController.signUp
 );
+
 
 passportLocalRouter.post(
   '/login',

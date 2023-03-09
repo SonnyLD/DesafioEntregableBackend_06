@@ -24,7 +24,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       minLength: 6,
-      maxLength: 10,
     },
     cart: {
       type: mongoose.Schema.Types.ObjectId, 
@@ -32,17 +31,11 @@ const userSchema = new mongoose.Schema(
       required: true,
       default: null
   },
-  role: {
-    type: String,
-    default: "user",
-    enum: ["admin", "user"],
-  }
   },
   {
     timestamps: true,
   },
 );
 
-const UserModel = mongoose.model("Users", userSchema);
+export const UserModel = mongoose.model("Users", userSchema);
 
-export default UserModel;

@@ -1,14 +1,17 @@
-import userService from './user.services.js';
+import userService from './user.service.js';
+import bcrypt from 'bcrypt';
 
 class AuthServices {
   async login(email, password) {
     try {
+      
       const user = await userService.getUser(email);
 
       if (!user) {
         throw new Error('User not found')
       }
-      if (user.password !== password) {
+      const passwordMatch = await bcrypt.compare(password, user.password);
+      if (!passwordMatch) {
         throw new Error('Wrong password')
       }
      

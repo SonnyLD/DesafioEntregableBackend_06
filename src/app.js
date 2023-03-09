@@ -7,17 +7,17 @@ import viewsRouter from './routers/views.router.js';
 import passportLocalRouter from'./routers/passportLocal.router.js';
 import githubRouter from './routers/github.routes.js';
 import dotenv from 'dotenv';
-import "./config/db.js";
+dotenv.config();
+if (process.env.MONGO_URI) import("./config/db.js");
 import cookie from "cookie-parser";
 import session from "express-session";
 import mongoStore from "connect-mongo";
 import { engine } from 'express-handlebars';
 import { Server } from 'socket.io';
 import passport from 'passport';
-import configPassport from './config/passport.config.js';
 import webSocketService from './services/websocket.services.js';
 
-dotenv.config()
+
 
 const app = express();
 
@@ -45,7 +45,7 @@ app.engine('handlebars', engine());
 app.set('view engine', 'handlebars');
 app.set('views', 'src/views');
 
-configPassport(passport);
+
 app.use(passport.initialize());
 app.use(passport.session());
 

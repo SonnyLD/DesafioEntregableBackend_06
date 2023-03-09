@@ -1,56 +1,89 @@
-import passportLocal from 'passport-local';
-import UserService from "../services/user.services.js";
+import { UserModel } from '../dao/models/users.models.js';
+import { Strategy }  from 'passport-local';
+import UserService from "../services/user.service.js";
 import authServices from '../services/auth.service.js'
 import passportGithub from 'passport-github2';
+import passport from 'passport';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-function passportConfig(passport) {
-  passport.use(
-    'signup',
-    new passportLocal.Strategy(
-      { passReqToCallback: true, usernameField: 'email' },
-      async (req, username, password, done) => {
-        try {
-          const userExist = await UserService.getUser(username);
+passport.serializeUser(function (user, done) {
+  console.log("Serializing");
+  done(null, user._id);
+});
 
-          if (userExist) {
-            return done(null, false, {
-              message: 'Email is already registered',
-            });
-          }
+passport.deserializeUser(function (_id, done) {
+  console.log("Deserializing");
+  UserModel.findById(_id, function (err, user) {
+    done(err, user);
+  });
+});
 
-          const user = await UserService.createUser(req.body);
+passport.use(
+  "signup",
+  new Strategy({ passReqToCallback: true, usernameField: "email" }, async function (
+    req,
+    username,
+    password,
+    done,
+  ) {
+    try {
+      console.log("req.body:", req.body);
+      const userExist = await UserModel.findOne({ email: username });
+      console.log("userExist:", userExist);
 
-          return done(null, user);
-        } catch (error) {
-          throw new Error(error.message);
-        }
+      if (userExist) {
+        console.log("User already exists");
+        return done("El usuario ya existe", false);
+
+      } else {
+        const userData = {
+          first_name: req.body.firstName,
+          last_name: req.body.lastName,
+          email: req.body.email,
+          password: req.body.password,
+          age: req.body.age,
+        };
+        console.log("userData:", userData);
+        const user = await UserService.createUser(userData);
+
+        console.log("User created:", user);
+        return done(null, user);
       }
-    )
-  );
+    } catch (error) {
+      console.error("Error creating user:", error.message);
+      throw new Error(error.message);
+    }
+  }),
+);
 
-  passport.use(
-    'login',
-    new passportLocal.Strategy(
-      { passReqToCallback: true, usernameField: 'email' },
-      async (req, username, password, done) => {
-        try {
-          const user = await authServices.login(username, password);
 
-          if (!user) {
-            return done(null, false);
-          }
-
-          return done(null, user);
-        } catch (error) {
-          done(null, false, { message: error.message });
-          //throw new Error(error.message);
-        }
+passport.use("login", 
+new Strategy({passReqToCallback:true, usernameField:'email'}, async function (
+  req,
+  username,
+  password,
+  done
+  
+  ) {
+ 
+  try {
+      const user = await UserModel.findOne({ email: username });
+      
+      if (!user) {
+        return done(null, false, { message: 'User not found', email: username });
       }
-    )
-  );
+      const login = await authServices.login(username, password)
+      if (login) {
+        return done(null, user);
+    } else {
+      return done(null,false, { message: 'Invalid password' })
+    }
+  } catch (error) {
+    return done(error);
+  }
+}));
   passport.use(
     'github',
     new passportGithub.Strategy(
@@ -62,7 +95,7 @@ function passportConfig(passport) {
       async (accessToken, refreshToken, profile, done) => {
         try {
           const user = await UserService.getUser(profile._json.email);
-
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              
           if (!user) {
             const names = [
               profile.displayName.split(' ')[0],
@@ -90,20 +123,5 @@ function passportConfig(passport) {
     )
   );
 
-  passport.serializeUser((user, done) => {
-    console.log('Serializing');
-    done(null, user._id);
-  });
 
-  passport.deserializeUser(async (_id, done) => {
-    console.log('Deserializing');
-    const user = await UserService.getUserById(_id);
-    if (!user) {
-      return done(null, false);
-    }
-
-    done(null, user);
-  });
-}
-
-export default passportConfig;
+export default passport;

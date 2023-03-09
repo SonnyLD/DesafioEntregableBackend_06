@@ -43,7 +43,7 @@ async addProductToCart(idCart, idProduct, quantity) {
     let updatedCart = {};
     if (productIsInCart) { 
         const cart = await CartModel.findOneAndUpdate(
-            { _id: cartID, 'products.product': idProduct },
+            { _id: idCart, 'products.product': idProduct },
             { $inc: {'products.$.quantity': quantity} },
             { new: true }
         ).lean()
@@ -93,10 +93,10 @@ async deleteProductFromCart(idCart, idProduct, quantity) {
         const product = await productService.getProduct(idProduct);
 
         if (cart && product) {
-            let productIndex = cart.Products.findIndex(prod => prod.idProduct === idProduct);
+            let productIndex = cart.products.findIndex(prod => prod.idProduct === idProduct);
             if (productIndex != -1) { // Technically index will always be != -1 because it comes from the cart, but just in case
-                cart.Products.splice(productIndex, 1);
-                cart.subtotal = cart.Products.map(prod => prod.total).reduce((acc, curr) => acc + curr);
+                cart.products.splice(productIndex, 1);
+                cart.subtotal = cart.products.map(prod => prod.total).reduce((acc, curr) => acc + curr);
             }
         }
         return await cart.save();

@@ -1,6 +1,7 @@
 export async function fail(req, res) {
   console.log('Failed login');
-  res.redirect('error', { error: 'Failed login' });
+  res.redirect('/failed', 401);
+  //res.redirect('error', { error: 'Failed login' });
 }
 
 export async function signUp(req, res) {
